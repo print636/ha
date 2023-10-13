@@ -173,20 +173,48 @@ void verse(char* input, char* output)
 		   stack_push(&stack, &input[i++]);//左括号表示要有额外优先级了，但它本身不代表要操作，只需入栈等待右括号到来即可
 	    }
 	    else if(input[i] == ')')
-	    {
+	    {        
+	            if(input[i-1] == '(')
+	            {
+	                 output[j] = 'a';
+	                 return;
+	            }
+	           
 		    while(stack.pTop != stack.pBase && *(stack.pTop-1) != '(') //这里是第二个错误，要减1才是真正的首元素
 		    {
-		        StackElem element;
+		            StackElem element;
 			    stack_pop(&stack, &element);
                             output[j++] = element; 
                             output[j++] = ' ';
 		    }
+		    
 		        StackElem ha ;
 		        stack_pop(&stack, &ha);	     //将用完的左括号出栈   ，这里也可以指向空
+		        
+		        StackElem h;
+		        stack_get_top(&stack, &h);   //取栈顶元素
+		        if( h == '-' )
+		        {
+		            StackElem ele;
+			    stack_pop(&stack, &ele);
+                            output[j++] = ele; 
+                            output[j++] = ' ';
+		        }
+             	
 		        i++;    //  第一个错误，导致段错误的祸首，因为无限循环了 卡了我这么久：2023.10.8. 17:00 到2023.10.9. 2:12  好好好🦸
+		        
            }
            else //剩下的就是符号了，利用compare函数实现优先级
            {  
+              if(input[i] == '-')    //哭了。。。
+              {
+                   if(i == 0 || input[i-1] == '(')
+                   {
+                     output[j++] = '0';
+                     output[j++] = ' '; 
+                   }                 
+              }
+              
               while(!is_empty(&stack) && compare(input[i]) - compare(*(stack.pTop-1))<= 0 )
 	      {    
 		        if(*stack.pTop == '(')   //这个情况是为了防止使用括号时出错，因为括号无法与计算符比较
@@ -204,7 +232,7 @@ void verse(char* input, char* output)
                 stack_push(&stack, &input[i++]);    //不管怎样最后都要入栈的
            }
     
-         }
+}
          
             //最后将栈中剩余的符号依次弹出 
 while(!is_empty(&stack))
@@ -264,7 +292,7 @@ double calculate(char* output)
     if(is_abc(output))
         {
             printf("多项式无法计算\n");
-            return 0;
+            return -404;
         }
         
         char* token;
@@ -287,15 +315,15 @@ double calculate(char* output)
                 case '+': arr[i-2] = arr[i-2] + arr[i-1] ; break;  
                 case '-': arr[i-2] = arr[i-2] - arr[i-1] ; break;  
                 case '*': arr[i-2] = arr[i-2] * arr[i-1] ; break;  
-                case '/': if (arr[i-1] == 0) { printf("除数不能为0!\n"); exit(1); } // 检查0是否为分母
+                case '/': if (arr[i-1] == 0) { printf("除数不能为0!\n"); return -404; } // 检查0是否为分母
                           else arr[i-2] = arr[i-2] / arr[i-1] ; break;        
             }
             i--;
          }
-         else
-         {
-             printf("ERROR\n");
-         }
+      //   else
+       //  {
+       //      printf("ERROR\n");
+        // }
          token = strtok(NULL, " ");
      }   
      return arr[0];
